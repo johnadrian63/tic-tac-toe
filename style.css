@@ -1,0 +1,47 @@
+body {
+    font-family: 'Courier New', Courier, monospace;
+
+    h2 {
+        text-align: center;
+        margin: 20px 0 0;
+    }
+
+    #container {
+        display: flex;
+        justify-content: center;
+    }
+
+    #result {
+        min-height: 23px;
+        text-align: center;
+        font-size: 21px;
+        margin-bottom: 5px;
+    }
+
+    .app-table {
+        border-collapse: collapse;
+        table-layout: fixed;
+        width: 300px;
+        height: 300px;
+
+        td {
+            border: solid 5px #575656;
+            border-spacing: 0;
+            text-align: center;
+            font-size: 24px;
+            font-weight: 700;
+        }
+    }
+
+    .option {
+        margin-top: 5px;
+        text-align: center;
+    }
+
+    #reset-btn {
+        padding: 10px;
+        background-color: #fff;
+        border: solid 1px #ccc;
+        cursor: pointer;
+    }
+}
