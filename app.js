@@ -1,9 +1,141 @@
 (function () {
-  class TicTactToe {
-    #container = document.getElementById("container");
-    #tableElement = document.createElement("table");
+  class CellElementRef {
+    #element;
+    #callback;
 
-    #cellData = [
+    constructor(element, callback) {
+      this.#element = element;
+      this.#callback = callback;
+    }
+
+    removeListener() {
+      this.#element.removeEventListener("click", this.#callback);
+    }
+  }
+
+  const container = document.getElementById("container");
+  const tableElement = document.createElement("table");
+  const playerX = "X";
+  const playerO = "O";
+  const totalCellCount = 9;
+  const cellElementRefs = new Set();
+
+  let cellData = [];
+  let currentPlayer;
+
+  tableElement.classList.add("app-table");
+
+  container.appendChild(tableElement);
+
+  document.getElementById("reset-btn").addEventListener("click", () => {
+    while (tableElement.firstChild) {
+      tableElement.removeChild(tableElement.firstChild);
+    }
+
+    currentPlayer = playerX;
+
+    notifyMessage("");
+
+    renderApp();
+  });
+
+  renderApp();
+
+  function renderApp() {
+    const cellPerRow = 3;
+
+    currentPlayer = playerO;
+
+    cellData = [...generateCellData()];
+
+    for (let cellIndex = 0; cellIndex < totalCellCount; cellIndex++) {
+      if (cellIndex % 3 === 0) {
+        const tableRowElement = document.createElement("tr");
+
+        tableElement.appendChild(tableRowElement);
+
+        for (let rowCellIndex = 0; rowCellIndex < cellPerRow; rowCellIndex++) {
+          createCellElement(tableRowElement, rowCellIndex, cellIndex);
+        }
+      }
+    }
+  }
+
+  function createCellElement(tableRowElement, rowCellIndex, cellIndex) {
+    const tableCellElement = document.createElement("td");
+    const cellIndexKey = cellIndex + rowCellIndex;
+    const onSelect = () => {
+      // simulate switching of player
+      notifyMessage(`${currentPlayer} turn.`);
+
+      tableCellElement.removeEventListener("click", onSelect);
+
+      currentPlayer = currentPlayer === playerX ? playerO : playerX;
+
+      tableCellElement.innerHTML = currentPlayer;
+
+      selectCell(cellIndexKey);
+    };
+
+    tableCellElement.innerHTML = `&nbsp;`;
+    tableCellElement.addEventListener("click", onSelect);
+
+    cellElementRefs.add(new CellElementRef(tableCellElement, onSelect));
+
+    tableRowElement.appendChild(tableCellElement);
+  }
+
+  function selectCell(cellIndexKey) {
+    const populatedCellDataIndexThreshold = 2;
+    const cellDataCount = cellData.length;
+    const selectedIndexKeySet = new Set();
+
+    for (
+      let cellDataIndex = 0;
+      cellDataIndex < cellDataCount;
+      cellDataIndex++
+    ) {
+      const cellDataMapper = cellData[cellDataIndex];
+
+      // populated the selected cells
+      cellDataMapper.forEach((currentValue, indexKey) => {
+        if (currentValue === null && cellIndexKey === indexKey) {
+          cellDataMapper.set(cellIndexKey, currentPlayer);
+        }
+
+        if (cellDataIndex <= populatedCellDataIndexThreshold) {
+          const currentValue = cellDataMapper.get(indexKey);
+
+          if (currentValue) {
+            selectedIndexKeySet.add(indexKey);
+          }
+        }
+      });
+
+      // check for matched cells
+      const cellDataValues = Array.from(cellDataMapper.values());
+      const cellDataMatchFound = cellDataValues.every(
+        (value) => value === currentPlayer
+      );
+
+      if (cellDataMatchFound) {
+        notifyMessage(`Player ${currentPlayer} wins!`);
+
+        removeCellListeners();
+
+        break;
+      }
+
+      if (selectedIndexKeySet.size === totalCellCount) {
+        notifyMessage("It's a draw!");
+      }
+    }
+
+    console.log("cell data values", cellData);
+  }
+
+  function generateCellData() {
+    return [
       // tracking for row 1
       new Map([
         [0, null],
@@ -53,106 +185,19 @@
         [6, null],
       ]),
     ];
-
-    #playerX = "X";
-    #playerO = "O";
-
-    #currentPlayer = this.#playerO;
-
-    constructor() {
-      this.#tableElement.classList.add("app-table");
-
-      this.#container.appendChild(this.#tableElement);
-
-      this.renderApp();
-
-      document.getElementById("reset-btn").addEventListener("click", () => {
-        while (this.#tableElement.firstChild) {
-          this.#tableElement.removeChild(this.#tableElement.firstChild);
-        }
-
-        notifyWinner("");
-
-        this.renderApp();
-      });
-    }
-
-    renderApp() {
-      const totalCellCount = 9;
-      const cellPerRow = 3;
-
-      for (let cellIndex = 0; cellIndex < totalCellCount; cellIndex++) {
-        if (cellIndex % 3 === 0) {
-          const tableRowElement = document.createElement("tr");
-
-          this.tableElement.appendChild(tableRowElement);
-
-          for (
-            let rowCellIndex = 0;
-            rowCellIndex < cellPerRow;
-            rowCellIndex++
-          ) {
-            const tableCellElement = document.createElement("td");
-            const cellIndexKey = cellIndex + rowCellIndex;
-
-            tableCellElement.innerHTML = "&nbsp;";
-
-            const onSelect = () => {
-              // simulate switching of player
-              this.#currentPlayer =
-                this.#currentPlayer === this.#playerX
-                  ? this.#playerO
-                  : this.#playerX;
-
-              tableCellElement.innerHTML = currentPlayer;
-              tableCellElement.removeEventListener("click", onSelect);
-
-              selectCell(cellIndexKey);
-            };
-
-            tableCellElement.addEventListener("click", onSelect);
-
-            tableRowElement.appendChild(tableCellElement);
-          }
-        }
-      }
-    }
-
-    #selectCell(cellIndexKey) {
-      for (
-        let cellDataIndex = 0;
-        cellDataIndex < this.#cellData.length;
-        cellDataIndex++
-      ) {
-        const cellDataMapper = this.#cellData[cellDataIndex];
-
-        cellDataMapper.forEach((currentValue, indexKey) => {
-          if (currentValue === null && cellIndexKey === indexKey) {
-            cellDataMapper.set(cellIndexKey, this.#currentPlayer);
-          }
-        });
-
-        const cellDataValues = Array.from(cellDataMapper.values());
-        const cellDataMatched = cellDataValues.every(
-          (value) => value === this.#currentPlayer
-        );
-
-        if (cellDataMatched) {
-          this.notifyWinner(`${this.#currentPlayer} win!`);
-
-          break;
-        }
-      }
-
-      console.log("cell data values", cellData);
-    }
-
-    notifyWinner(message) {
-      const resultElement = document.getElementById("result");
-
-      resultElement.innerHTML = message;
-    }
   }
 
-  new TicTactToe();
+  function notifyMessage(message) {
+    const resultElement = document.getElementById("result");
+
+    resultElement.innerHTML = message;
+  }
+
+  function removeCellListeners() {
+    cellElementRefs.forEach((ref) => {
+      ref.removeListener();
+    });
+
+    cellElementRefs.clear();
+  }
 })();
